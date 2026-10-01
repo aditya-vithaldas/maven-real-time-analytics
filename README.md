@@ -1,14 +1,75 @@
 # Maven Real-Time Analytics
 
-A local voice analytics training demo that compares four levels of model context over the same Meridian synthetic e-commerce database. Ask the same question in each tab to see how database structure, query guidance, and domain intelligence affect the answer. The interface shows one primary result and measures time to first speech for voice.
+This project demonstrates how the context given to an AI analyst affects its ability to answer business questions. It is a local training and demo app with four tabs: database access, database structure, query instructions, and domain intelligence.
 
-The repository includes the application, runtime prompts, principles, domain intelligence, workflows, schema, dataset generator, and benchmark reports. API credentials, database binaries, installed dependencies, and local cloud download records stay outside Git.
+Each tab uses the same Meridian e-commerce database and the same configured models. Ask the same question across all four to compare the answer, the SQL, and the response time. The knowledge supplied to the model grows at each step.
 
-See the [prompt and knowledge file guide](prompts/README.md) for the separate app-building prompt, four Gemini runtime prompts, and supporting principles/domain/workflow documents.
+## 1. Runtime discovery — give it access to the data
 
-## Start from a fresh clone
+The model starts with a short operating prompt and tools to read the database. It discovers the tables and columns at runtime, formulates SQL, and returns an answer.
 
-You need Python 3.12, Node.js with npm, and a Gemini API key with access to the configured `gemini-3.8-live` and `gemini-3.8-flash` models. The application runs locally and uses Gemini remotely for model responses.
+This level demonstrates what an analyst can infer from the database itself, how much discovery it needs, and where business meaning remains ambiguous.
+
+**Context:** database tools and basic instructions to query safely, answer briefly, and show a result.
+
+[Exact Gemini prompt](prompts/01-runtime-discovery.md)
+
+## 2. Schema only — add the database structure
+
+Everything in Tab 1, plus table names, column names, and SQL types supplied in advance.
+
+The model has a map of the database before answering. The schema tells it what fields exist, while definitions such as what counts as sales, how tables should be joined, and which metric formula to use are left for it to infer.
+
+**Added context:** the raw database structure.
+
+[Exact Gemini prompt](prompts/02-schema-only.md) · [Database structure](prompts/db-structure.md)
+
+## 3. Guided queries — add the instructions to use it correctly
+
+Everything in Tab 2, plus field meanings, units, table grains, relationships, metric definitions, and key SQL recipes.
+
+For example, the guide defines sales as completed-order net revenue and explains how joining orders to line items can multiply an order total. It distinguishes orders, line-item rows, and units sold. This level demonstrates how explicit guidance can help a model interpret a question and build the right query.
+
+**Added context:** what each field means, what links to what, and how to calculate the key metrics.
+
+[Exact Gemini prompt](prompts/03-guided-queries.md) · [Field and query guide](prompts/field-guide.md)
+
+## 4. Domain + workflows — add the business understanding
+
+Everything in Tab 3, plus analytical principles, commerce intelligence, and investigation workflows.
+
+This level supplies guidance for follow-ups such as “What contributed to the sales decline?” It helps the analyst choose a relevant investigation, preserve the question's scope, distinguish a measured contribution from a causal hypothesis, and recognize missing data.
+
+**Added context:** how to interpret the result, investigate a business question, and communicate the evidence.
+
+[Exact Gemini prompt](prompts/04-domain-workflows.md) · [Principles](principles.md) · [Domain intelligence](domain-intelligence.md) · [Workflows](workflows.md)
+
+## Use it as a training demo
+
+1. Ask a question in Tab 1, such as “What were my sales on 29 September 2026?”
+2. Ask the same question in Tabs 2, 3, and 4.
+3. Compare the result, query evidence, and timing. Look for differences in definitions, filters, joins, and discovery steps.
+4. Try a trend, a category comparison, or a follow-up investigation to explore what the extra context enables.
+
+All four tabs query the actual database. They keep separate conversation context, and reloading the page starts a fresh demo session. For independent comparisons, reload between questions. Switching tabs stops the microphone and closes the current voice connection; reconnecting starts a fresh voice context. Typed and voice histories are separate.
+
+The main body shows the current question and one primary result: a number card, line graph, bar chart, or table. Expand the SQL evidence to inspect how the answer was calculated. The right panel summarizes the added context, then shows the full Gemini system prompt.
+
+The talk path uses **Google Gemini 3.8 Live (`gemini-3.8-live`)** in every tab and gives brief spoken answers. The top timer measures **time to first speech**: from the end of your question until the first non-silent assistant audio is scheduled for playback. It freezes when speech begins. The app uses server voice-activity offsets when available and a microphone-based estimate otherwise. The typed fallback uses **Gemini 3.8 Flash (`gemini-3.8-flash`)** and displays completed text response time.
+
+The demonstration is designed to let you observe the effect of context. More context does not guarantee a correct answer or a faster response. SQL safety is enforced by the app; independent review of business correctness is not automatically implemented.
+
+## Prompts and knowledge files
+
+- [App-building prompt](prompts/app-build.md): the consolidated instructions for a coding agent to recreate this app. The small document/code icon in the toolbar opens it.
+- [Gemini runtime prompts](prompts/README.md#2-prompts-sent-to-gemini): the four separate system prompts used to answer questions.
+- [Supporting knowledge](prompts/README.md#3-supporting-principles-and-knowledge): principles, domain intelligence, workflows, schema, and field/query guides.
+
+See the [complete prompt and knowledge file guide](prompts/README.md) for every file and its role. Runtime prompts are self-contained snapshots; changes to supporting documents need to be reflected in the relevant runtime prompt files.
+
+## Run locally
+
+You need Python 3.12, Node.js with npm, and your own Gemini API key with access to the configured Live and Flash models. The app runs locally and calls Gemini remotely.
 
 ```sh
 git clone https://github.com/aditya-vithaldas/maven-real-time-analytics.git
@@ -18,7 +79,7 @@ python3.12 -m venv .venv
 cp .env.example .env
 ```
 
-Add your key to `GEMINI_API_KEY` in `.env`. Keep the default `DUCKDB_PATH=./data/ecommerce.duckdb` for the generated dataset. Then create the data and launch the app:
+Add your key to `GEMINI_API_KEY` in `.env`. Keep `DUCKDB_PATH=./data/ecommerce.duckdb` for the default dataset. Then generate the data and start the app:
 
 ```sh
 (cd dataset-generator && npm ci)
@@ -27,93 +88,24 @@ DATA_DIR=./data DEMO_SCALE=1 node dataset-generator/build-demo.mjs
 .venv/bin/python server.py
 ```
 
-Open [http://127.0.0.1:8765](http://127.0.0.1:8765). Allow microphone access to use Start talking; typed questions also work. On macOS, `start.command` starts the app after setup.
+Open [http://127.0.0.1:8765](http://127.0.0.1:8765) and allow microphone access to use **Start talking**. On macOS, `start.command` launches the app after setup. You can check Gemini access without generating a response using `.venv/bin/python check_setup.py --gemini`.
 
-The generator replaces its tables. Run it in a fresh data directory when preserving an existing database; see the regeneration instructions below.
+The repository includes the source, prompts, knowledge documents, schema, generator, and benchmark reports. Credentials, database binaries, and installed dependencies are excluded from Git. The permanent API key stays on the local server; the browser receives an expiring voice-session token.
 
-## Dataset and local files
+## The Meridian dataset
 
-- Database: `data/ecommerce.duckdb`, 10 million rows across 12 tables.
-- Trading period: **30 September 2025 through 29 September 2026**, inclusive (365 days).
-- Schema, relationships, category catalog, and metric definitions: `data/schema.json`.
-- Gemini key and database path: your local `.env` (excluded from Git).
-- Python environment and dependencies: your local `.venv`, installed from `requirements.txt`.
+The synthetic dataset has **10 million rows across 12 tables**, covering **30 September 2025 through 29 September 2026**. It includes orders, items, customers, products, sessions, payments, shipments, calendar, regions, categories, modeled business events, and competitor snapshots. All monetary amounts are USD, and all records and market observations are synthetic.
 
-The included Meridian v5 generator creates orders, items, customers, products, sessions, payments, shipments, calendar, regions, categories, 60 business events, and 5,840 market snapshots. Customer signup and shipment dates can fall outside the trading period. All records, business events, and competitor snapshots are synthetic. No Google Cloud credentials are needed to generate or query the local database. Start with [local-assets.md](local-assets.md) for the complete build pack.
+Read [data/schema.json](data/schema.json) for the dataset structure and rules, and [examples/questions.json](examples/questions.json) for example questions and reference SQL. Relative dates are anchored to the dataset's latest date. No Google Cloud credentials are needed to generate or query the local database. See [local-assets.md](local-assets.md) for the local file checklist.
 
-## Run the four-tab demo
+The generator replaces its tables. To preserve an existing database, generate another copy in a fresh directory:
 
 ```sh
-.venv/bin/python server.py
-```
-
-Open [http://127.0.0.1:8765](http://127.0.0.1:8765). This is local-only; nothing is deployed. The compact layout is ready for recording a training/demo video, with a fixed model and no view toggles.
-
-| Tab | Knowledge given to the model |
-| --- | --- |
-| Runtime discovery | No supplied structure; discovers raw tables and columns using runtime database tools. |
-| Schema only | Table names, columns, and SQL types; no commerce meanings or query recipes. |
-| Guided queries | Structure plus field meanings, relationships, grain, and key query recipes. |
-| Domain + workflows | All of the above plus principles, commerce intelligence, and investigation workflows. |
-
-The right panel is labelled **Gemini runtime prompt**. It starts with short cumulative summaries: Tab 1 provides A (database access); Tab 2 inherits Tab 1 and adds B (structure); Tab 3 inherits Tab 2 and adds C/D (field meanings and joins/query recipes); Tab 4 inherits Tab 3 and adds E/F (principles/domain intelligence and workflows). Each tab shows only its additions, followed by a separator and the complete exact prompt. The summaries help the audience understand what each level provides without reading the full prompt. The small document/code icon at the top opens the **app-building prompt**, a consolidated rebuild brief saved in `prompts/app-build.md`, with Copy, Close, and Escape support. It is displayed only when opened and is never sent to Gemini as runtime context.
-
-The exact system prompt is visible and copyable inside every tab, and saved in `prompts/01-runtime-discovery.md` through `prompts/04-domain-workflows.md`. Runtime discovery uses a minimal prompt with no supplied schema or business guidance. Schema only adds the raw structure to equally brief instructions; the third and fourth tabs retain detailed guidance. All prompts require brief responses, database-backed results, read-only access, one primary widget, and the fixed live engine. Every tab queries `data/ecommerce.duckdb`. Each tab keeps separate conversation context. Reloading the page starts a fresh demo session. Switching tabs stops the microphone and closes the current live session.
-
-**Talk path:** click Start talking and allow microphone access. All four use **Google Gemini 3.8 Live (`gemini-3.8-live`)**, with short native spoken replies, transcripts, and database tools. The permanent API key stays server-side; the browser receives an expiring single-session token. A stopped/disconnected Live session starts fresh on reconnect; existing on-screen messages remain, but are not silently imported into a new Live connection. Typed conversation history is separate from Live history.
-
-**Text path:** uses the fixed Gemini 3.8 Flash model. Model selection, Reset tab, and presentation/standard view controls are removed from the demo. Hold the question constant across tabs for the clearest context comparison. The main body shows only the current question and one primary result: a total-number card, time-series line graph, category bar chart, or detail table. The model selects a widget from an actual query result via show_widget; it cannot supply invented widget data. Conversation history is preserved internally for follow-ups, without a chat feed. The top toolbar shows one timing: **time to first speech** for voice, measured from the end of the user’s question to the first non-silent assistant audio scheduled for playback. It freezes at speech onset. Output transcripts and the end of the spoken reply do not stop or extend this timer. Server VAD audio offsets are used when provided; otherwise microphone activity estimates the question end. Typed requests are separately labelled **Text completion time** because that endpoint returns the complete reply. The narrow side panel is devoted to the current tab’s prompt. The workspace fills the window, with a compact toolbar and input controls that stay visible on desktop. SQL/tool evidence remains expandable under the current result. The introductory heading and masthead are removed to focus on the workspace. No canned answers or expected fixture values are injected into prompts.
-
-Query safety is enforced using a parsed SQL allowlist, read-only DuckDB, disabled external access, a query timeout, and bounded results. This does not prove the business meaning of a generated query. Independent model review described in the original principles is not automatically implemented, and the fourth tab's prompt explicitly states that limitation.
-
-The voice timing uses the browser AudioContext playback clock and Google’s [voice activity detection](https://ai.google.dev/gemini-api/docs/live-api/capabilities#voice-activity-detection-vad). Microphone-based endpointing is an estimate and can be affected by noise. The saved five-question benchmark measures completed text responses; its numbers are not first-speech latency.
-
-The live implementation follows Google's [WebSocket guide](https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket) and [ephemeral token guide](https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens).
-
-## Check the setup
-
-From this folder:
-
-```sh
-source .venv/bin/activate
-python check_setup.py
-python check_setup.py --gemini
-```
-
-The Gemini check lists available models without requesting content generation. Text generation was verified on all four tabs. Gemini 3.8 Live was verified through an actual database tool call and native audio output; browser microphone connection/shutdown was checked with a simulated microphone. Physical microphone/audio quality still needs a human check.
-
-The saved [five-question comparison](benchmarks/response-comparison.md) and [HTML report](benchmarks/response-comparison.html) include all four tabs. These measure completed text responses, not time to first speech. Raw results and the scripts to repeat the comparison are in `benchmarks/`.
-
-## Query the data
-
-```python
-import duckdb
-
-with duckdb.connect("data/ecommerce.duckdb", read_only=True) as db:
-    print(db.sql("""
-        SELECT order_date, SUM(net_amount) AS revenue
-        FROM orders
-        WHERE status = 'completed'
-        GROUP BY order_date
-        ORDER BY order_date DESC
-        LIMIT 7
-    """).fetchall())
-```
-
-Sales means completed-order net revenue, excluding tax and shipping. Read the rules in `data/schema.json` before writing analytical queries; joining orders to order items can multiply order revenue. Anchor relative dates to the dataset end date, 29 September 2026.
-
-## Recreate the environment or dataset
-
-```sh
-uv venv .venv --python 3.12
-uv pip install --python .venv/bin/python -r requirements.txt
-```
-
-A snapshot of the original generator and its dependency lockfile is in `dataset-generator/`. To create another database in a fresh directory:
-
-```sh
-(cd dataset-generator && npm ci)
 DATA_DIR=./data-regenerated DEMO_SCALE=1 node dataset-generator/build-demo.mjs
 ```
 
-The generator replaces its tables, so use a fresh output directory to preserve working data. Set `DUCKDB_PATH=./data-regenerated/ecommerce.duckdb` in `.env` to use that copy. The local comparison application is implemented in `server.py` and `web/`. No application is deployed to a remote service.
+Set `DUCKDB_PATH=./data-regenerated/ecommerce.duckdb` in `.env` to use that copy.
+
+## Saved comparison
+
+The [five-question comparison](benchmarks/response-comparison.md) and [HTML report](benchmarks/response-comparison.html) contain the saved answers, queries, failures, and reference checks across all four tabs. These are completed text response measurements; they do not measure time to first speech. Raw results and repeatable comparison scripts are in `benchmarks/`.
