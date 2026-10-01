@@ -4,6 +4,8 @@ A local voice analytics training demo that compares four levels of model context
 
 The repository includes the application, runtime prompts, principles, domain intelligence, workflows, schema, dataset generator, and benchmark reports. API credentials, database binaries, installed dependencies, and local cloud download records stay outside Git.
 
+See the [prompt and knowledge file guide](prompts/README.md) for the separate app-building prompt, four Gemini runtime prompts, and supporting principles/domain/workflow documents.
+
 ## Start from a fresh clone
 
 You need Python 3.12, Node.js with npm, and a Gemini API key with access to the configured `gemini-3.8-live` and `gemini-3.8-flash` models. The application runs locally and uses Gemini remotely for model responses.

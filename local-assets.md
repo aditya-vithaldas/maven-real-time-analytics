@@ -2,6 +2,8 @@
 
 Read in this order when building from scratch:
 
+Start with [prompts/README.md](prompts/README.md) to distinguish the app-building prompt, the exact prompts sent to Gemini, and the supporting knowledge files.
+
 1. principles.md — original Meridian analytical and conversational behavior.
 2. domain-intelligence.md — commerce priorities, metric definitions, joins, limitations, and cloud schema rules.
 3. build-spec.md — proposed user flow, runtime components, query contracts, voice handling, and completion criteria.
