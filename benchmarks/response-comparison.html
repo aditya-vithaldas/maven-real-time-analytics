@@ -1,0 +1,465 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Meridian completed-text response comparison</title><style>body{font:14px/1.6 system-ui,sans-serif;color:#25364e;background:#f4f6fa;margin:0;padding:28px}main{max-width:1300px;margin:auto}h1{font-size:28px;margin:0 0 8px}h2{font-size:18px}p{white-space:pre-wrap}table{width:100%;border-collapse:collapse;background:white;margin:20px 0;font-size:13px}th,td{text-align:left;padding:12px;border-bottom:1px solid #e1e7ef}td{text-align:right;font-variant-numeric:tabular-nums}thead{background:#edf2fc}.table-wrap{overflow:auto}.note,small{color:#62738b}.question{padding:20px;background:#fff;border:1px solid #e1e7ef;border-radius:10px;margin:20px 0}.answers{display:grid;grid-template-columns:1fr 1fr;gap:16px}article{padding:16px;background:#f9fbff;border:1px solid #e1e7ef;border-radius:8px}.answer-title{display:flex;justify-content:space-between;gap:12px}.answer-title span{color:#2d57dc;font-weight:700}details{margin-top:12px}summary{cursor:pointer;font-size:12px;color:#46628b}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.6 ui-monospace,monospace;background:#f1f4f9;padding:12px;max-height:350px;overflow:auto}a{color:#2d57dc}@media(max-width:760px){body{padding:12px}.answers{grid-template-columns:1fr}th,td{padding:8px}}</style><main><h1>Completed text response time across four tabs</h1><p>Gemini 3.8 Flash · Text path · Five questions per tab · Fresh context per request</p><p class="note">Sequential HTTP requests; fresh conversation for every question and tab; elapsed wall time includes model and database tools. One attempt per question per tab. No retries.</p><h2>Seconds per question</h2><div class="table-wrap"><table><thead><tr><th>Question</th><th>Runtime discovery</th><th>Schema only</th><th>Guided queries</th><th>Domain + workflows</th></tr></thead><tbody><tr><th>What were my sales on 29 September 2026?</th><td>46.04 (failed)</td><td>23.85</td><td>4.90</td><td>4.44</td></tr><tr><th>Show daily sales for the last seven available days.</th><td>66.28 (failed)</td><td>33.87</td><td>5.92</td><td>5.89</td></tr><tr><th>Which five categories had the highest sales on 29 September 2026?</th><td>26.43</td><td>20.04</td><td>5.88</td><td>5.61</td></tr><tr><th>How many units sold on 29 September 2026?</th><td>40.87</td><td>19.10</td><td>5.18</td><td>4.52</td></tr><tr><th>What was session conversion on 29 September 2026?</th><td>9.59</td><td>3.99</td><td>8.43</td><td>11.85</td></tr></tbody></table></div><h2>Summary</h2><div class="table-wrap"><table><thead><tr><th>Tab</th><th>Average</th><th>Median</th><th>Range</th><th>Completed</th><th>Reference matches</th></tr></thead><tbody><tr><th>Runtime discovery</th><td>25.63s</td><td>26.43s</td><td>9.59–40.87s</td><td>3/5</td><td>2/5</td></tr><tr><th>Schema only</th><td>20.17s</td><td>20.04s</td><td>3.99–33.87s</td><td>5/5</td><td>3/5</td></tr><tr><th>Guided queries</th><td>6.06s</td><td>5.88s</td><td>4.90–8.43s</td><td>5/5</td><td>5/5</td></tr><tr><th>Domain + workflows</th><td>6.46s</td><td>5.61s</td><td>4.44–11.85s</td><td>5/5</td><td>5/5</td></tr></tbody></table></div><p class="note">This is one small sample, not a latency guarantee. Successful-request averages exclude failures, which remain visible in the question table. Reference matching compares the selected numeric query result with reference SQL executed directly on the database; it does not independently judge every sentence. Timings include the full response and database tools, not just the first token or voice audio.</p><section class="question"><h2>Q1 · What were my sales on 29 September 2026?</h2><div class="answers"><article><div class="answer-title"><strong>Runtime discovery</strong><span>46.04s</span></div><p>{&quot;error&quot;: &quot;The request failed. Check model access/quota or try a narrower question.&quot;}</p><small>Request failed</small><details><summary>SQL and returned data</summary><pre>No selected result</pre><pre>{
+  &quot;columns&quot;: null,
+  &quot;rows&quot;: null
+}</pre></details></article><article><div class="answer-title"><strong>Schema only</strong><span>23.85s</span></div><p>Completed sales on 29 September 2026 were $1,651,201.07 (or $1,873,705.86 in total order volume including cancelled and returned orders).</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT ROUND(SUM(net_amount), 2) AS sales
+FROM orders
+WHERE order_date = &#x27;2026-09-29&#x27;
+  AND status = &#x27;completed&#x27;;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;sales&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      1651201.07
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Guided queries</strong><span>4.90s</span></div><p>Completed sales on 29 September 2026 were $1,651,201.07. This reflects net order amounts for completed transactions, excluding taxes and shipping charges.</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT SUM(net_amount) AS &quot;value&quot; FROM orders WHERE status = &#x27;completed&#x27; AND order_date = DATE &#x27;2026-09-29&#x27;;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;value&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      1651201.07
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Domain + workflows</strong><span>4.44s</span></div><p>Completed sales on 29 September 2026 were $1,651,201.07. This excludes taxes, shipping, and cancelled or returned orders.</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT SUM(net_amount) AS value FROM orders WHERE status = &#x27;completed&#x27; AND order_date = DATE &#x27;2026-09-29&#x27;;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;value&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      1651201.07
+    ]
+  ]
+}</pre></details></article></div><details><summary>Reference SQL and expected values</summary><pre>SELECT order_date::VARCHAR AS label, SUM(net_amount)::DOUBLE AS value FROM orders WHERE status=&#x27;completed&#x27; AND order_date=DATE &#x27;2026-09-29&#x27; GROUP BY order_date</pre><pre>[
+  [
+    &quot;2026-09-29&quot;,
+    1651201.07
+  ]
+]</pre></details></section><section class="question"><h2>Q2 · Show daily sales for the last seven available days.</h2><div class="answers"><article><div class="answer-title"><strong>Runtime discovery</strong><span>66.28s</span></div><p>{&quot;error&quot;: &quot;The request failed. Check model access/quota or try a narrower question.&quot;}</p><small>Request failed</small><details><summary>SQL and returned data</summary><pre>No selected result</pre><pre>{
+  &quot;columns&quot;: null,
+  &quot;rows&quot;: null
+}</pre></details></article><article><div class="answer-title"><strong>Schema only</strong><span>33.87s</span></div><p>Daily sales for the last seven available days (September 23 to September 29, 2026) ranged from $1.69M to $1.95M, peaking on September 27.</p><small>Inspect result / assumptions</small><details><summary>SQL and returned data</summary><pre>SELECT
+    order_date,
+    ROUND(SUM(net_amount), 2) AS daily_sales
+FROM orders
+WHERE order_date &gt;= (SELECT MAX(order_date) - INTERVAL 6 DAY FROM orders)
+GROUP BY order_date
+ORDER BY order_date ASC;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;order_date&quot;,
+    &quot;daily_sales&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      &quot;2026-09-23&quot;,
+      1882535.14
+    ],
+    [
+      &quot;2026-09-24&quot;,
+      1685798.3
+    ],
+    [
+      &quot;2026-09-25&quot;,
+      1898251.19
+    ],
+    [
+      &quot;2026-09-26&quot;,
+      1893064.43
+    ],
+    [
+      &quot;2026-09-27&quot;,
+      1954715.17
+    ],
+    [
+      &quot;2026-09-28&quot;,
+      1903313.13
+    ],
+    [
+      &quot;2026-09-29&quot;,
+      1873705.86
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Guided queries</strong><span>5.92s</span></div><p>Daily completed sales ranged from $1.12M to $1.73M across the last seven available days, anchored at September 29, 2026. Figures reflect completed order net revenue, excluding tax and shipping.</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT order_date AS label, SUM(net_amount) AS value FROM orders WHERE status = &#x27;completed&#x27; AND order_date BETWEEN DATE &#x27;2026-09-23&#x27; AND DATE &#x27;2026-09-29&#x27; GROUP BY order_date ORDER BY order_date;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;label&quot;,
+    &quot;value&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      &quot;2026-09-23&quot;,
+      1677816.87
+    ],
+    [
+      &quot;2026-09-24&quot;,
+      1120252.94
+    ],
+    [
+      &quot;2026-09-25&quot;,
+      1667650.36
+    ],
+    [
+      &quot;2026-09-26&quot;,
+      1659961.5
+    ],
+    [
+      &quot;2026-09-27&quot;,
+      1725209.0
+    ],
+    [
+      &quot;2026-09-28&quot;,
+      1674392.48
+    ],
+    [
+      &quot;2026-09-29&quot;,
+      1651201.07
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Domain + workflows</strong><span>5.89s</span></div><p>Daily completed sales ranged between $1.12M and $1.73M over the last seven available days (September 23–29, 2026), dipping on September 24 before rebounding to a peak on September 27.</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT order_date AS label, ROUND(SUM(net_amount), 2) AS value FROM orders WHERE status = &#x27;completed&#x27; AND order_date BETWEEN DATE &#x27;2026-09-23&#x27; AND DATE &#x27;2026-09-29&#x27; GROUP BY order_date ORDER BY order_date;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;label&quot;,
+    &quot;value&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      &quot;2026-09-23&quot;,
+      1677816.87
+    ],
+    [
+      &quot;2026-09-24&quot;,
+      1120252.94
+    ],
+    [
+      &quot;2026-09-25&quot;,
+      1667650.36
+    ],
+    [
+      &quot;2026-09-26&quot;,
+      1659961.5
+    ],
+    [
+      &quot;2026-09-27&quot;,
+      1725209.0
+    ],
+    [
+      &quot;2026-09-28&quot;,
+      1674392.48
+    ],
+    [
+      &quot;2026-09-29&quot;,
+      1651201.07
+    ]
+  ]
+}</pre></details></article></div><details><summary>Reference SQL and expected values</summary><pre>SELECT order_date::VARCHAR AS label, SUM(net_amount)::DOUBLE AS value FROM orders WHERE status=&#x27;completed&#x27; AND order_date BETWEEN DATE &#x27;2026-09-23&#x27; AND DATE &#x27;2026-09-29&#x27; GROUP BY order_date ORDER BY order_date</pre><pre>[
+  [
+    &quot;2026-09-23&quot;,
+    1677816.87
+  ],
+  [
+    &quot;2026-09-24&quot;,
+    1120252.94
+  ],
+  [
+    &quot;2026-09-25&quot;,
+    1667650.36
+  ],
+  [
+    &quot;2026-09-26&quot;,
+    1659961.5
+  ],
+  [
+    &quot;2026-09-27&quot;,
+    1725209.0
+  ],
+  [
+    &quot;2026-09-28&quot;,
+    1674392.48
+  ],
+  [
+    &quot;2026-09-29&quot;,
+    1651201.07
+  ]
+]</pre></details></section><section class="question"><h2>Q3 · Which five categories had the highest sales on 29 September 2026?</h2><div class="answers"><article><div class="answer-title"><strong>Runtime discovery</strong><span>26.43s</span></div><p>On 29 September 2026, the five categories with the highest sales were Headphones &amp; Audio ($53,667.59), Haircare ($53,181.10), Makeup ($52,766.77), Arts &amp; Crafts ($52,034.41), and Phones &amp; Accessories ($51,835.14).</p><small>Inspect result / assumptions</small><details><summary>SQL and returned data</summary><pre>SELECT
+    c.category_name,
+    ROUND(SUM(oi.net_amount), 2) AS sales
+FROM categories c
+JOIN products p ON c.category_id = p.category_id
+JOIN order_items oi ON p.product_id = oi.product_id
+JOIN orders o ON oi.order_id = o.order_id
+WHERE o.order_date = &#x27;2026-09-29&#x27;
+GROUP BY c.category_name
+ORDER BY sales DESC
+LIMIT 5</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;category_name&quot;,
+    &quot;sales&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      &quot;Headphones &amp; Audio&quot;,
+      53667.59
+    ],
+    [
+      &quot;Haircare&quot;,
+      53181.1
+    ],
+    [
+      &quot;Makeup&quot;,
+      52766.77
+    ],
+    [
+      &quot;Arts &amp; Crafts&quot;,
+      52034.41
+    ],
+    [
+      &quot;Phones &amp; Accessories&quot;,
+      51835.14
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Schema only</strong><span>20.04s</span></div><p>On 29 September 2026, the five categories with the highest sales were Headphones &amp; Audio ($53,667.59), Haircare ($53,181.10), Makeup ($52,766.77), Arts &amp; Crafts ($52,034.41), and Phones &amp; Accessories ($51,835.14).</p><small>Inspect result / assumptions</small><details><summary>SQL and returned data</summary><pre>SELECT
+    c.category_name,
+    ROUND(SUM(oi.net_amount), 2) AS total_sales
+FROM orders o
+JOIN order_items oi ON o.order_id = oi.order_id
+JOIN products p ON oi.product_id = p.product_id
+JOIN categories c ON p.category_id = c.category_id
+WHERE o.order_date = &#x27;2026-09-29&#x27;
+GROUP BY c.category_name
+ORDER BY total_sales DESC
+LIMIT 5;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;category_name&quot;,
+    &quot;total_sales&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      &quot;Headphones &amp; Audio&quot;,
+      53667.59
+    ],
+    [
+      &quot;Haircare&quot;,
+      53181.1
+    ],
+    [
+      &quot;Makeup&quot;,
+      52766.77
+    ],
+    [
+      &quot;Arts &amp; Crafts&quot;,
+      52034.41
+    ],
+    [
+      &quot;Phones &amp; Accessories&quot;,
+      51835.14
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Guided queries</strong><span>5.88s</span></div><p>On 29 September 2026, the top five categories by completed sales were Haircare ($48,626.90), Phones &amp; Accessories ($47,499.73), Headphones &amp; Audio ($47,163.08), Arts &amp; Crafts ($46,450.58), and Team Sports ($45,279.80). Figures reflect completed order line net amounts excluding tax and shipping.</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT c.category_name AS label, SUM(i.net_amount) AS value
+FROM order_items i
+JOIN orders o ON o.order_id = i.order_id
+JOIN products p ON p.product_id = i.product_id
+JOIN categories c ON c.category_id = p.category_id
+WHERE o.status = &#x27;completed&#x27;
+  AND o.order_date = DATE &#x27;2026-09-29&#x27;
+GROUP BY c.category_id, c.category_name
+ORDER BY value DESC
+LIMIT 5;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;label&quot;,
+    &quot;value&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      &quot;Haircare&quot;,
+      48626.9
+    ],
+    [
+      &quot;Phones &amp; Accessories&quot;,
+      47499.73
+    ],
+    [
+      &quot;Headphones &amp; Audio&quot;,
+      47163.08
+    ],
+    [
+      &quot;Arts &amp; Crafts&quot;,
+      46450.58
+    ],
+    [
+      &quot;Team Sports&quot;,
+      45279.8
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Domain + workflows</strong><span>5.61s</span></div><p>On 29 September 2026, the top five categories by completed sales were Haircare ($48,626.90), Phones &amp; Accessories ($47,499.73), Headphones &amp; Audio ($47,163.08), Arts &amp; Crafts ($46,450.58), and Team Sports ($45,279.80). Sales reflect net line amounts on completed orders, excluding taxes and shipping.</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT c.category_name AS label, ROUND(SUM(i.net_amount), 2) AS value
+FROM order_items i
+JOIN orders o ON o.order_id = i.order_id
+JOIN products p ON p.product_id = i.product_id
+JOIN categories c ON c.category_id = p.category_id
+WHERE o.status = &#x27;completed&#x27;
+  AND o.order_date = DATE &#x27;2026-09-29&#x27;
+GROUP BY c.category_id, c.category_name
+ORDER BY value DESC
+LIMIT 5;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;label&quot;,
+    &quot;value&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      &quot;Haircare&quot;,
+      48626.9
+    ],
+    [
+      &quot;Phones &amp; Accessories&quot;,
+      47499.73
+    ],
+    [
+      &quot;Headphones &amp; Audio&quot;,
+      47163.08
+    ],
+    [
+      &quot;Arts &amp; Crafts&quot;,
+      46450.58
+    ],
+    [
+      &quot;Team Sports&quot;,
+      45279.8
+    ]
+  ]
+}</pre></details></article></div><details><summary>Reference SQL and expected values</summary><pre>SELECT c.category_name AS label, SUM(i.net_amount)::DOUBLE AS value FROM order_items i JOIN orders o ON o.order_id=i.order_id JOIN products p ON p.product_id=i.product_id JOIN categories c ON c.category_id=p.category_id WHERE o.status=&#x27;completed&#x27; AND o.order_date=DATE &#x27;2026-09-29&#x27; GROUP BY c.category_id,c.category_name ORDER BY value DESC LIMIT 5</pre><pre>[
+  [
+    &quot;Haircare&quot;,
+    48626.9
+  ],
+  [
+    &quot;Phones &amp; Accessories&quot;,
+    47499.73
+  ],
+  [
+    &quot;Headphones &amp; Audio&quot;,
+    47163.08
+  ],
+  [
+    &quot;Arts &amp; Crafts&quot;,
+    46450.58
+  ],
+  [
+    &quot;Team Sports&quot;,
+    45279.8
+  ]
+]</pre></details></section><section class="question"><h2>Q4 · How many units sold on 29 September 2026?</h2><div class="answers"><article><div class="answer-title"><strong>Runtime discovery</strong><span>40.87s</span></div><p>A total of 14,095 units were sold across completed orders on 29 September 2026 (or 16,019 units across all order statuses including returns and cancellations).</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT SUM(oi.quantity) AS units_sold
+FROM orders o
+JOIN order_items oi ON o.order_id = oi.order_id
+WHERE o.order_date = &#x27;2026-09-29&#x27;
+  AND o.status = &#x27;completed&#x27;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;units_sold&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      14095
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Schema only</strong><span>19.10s</span></div><p>On 29 September 2026, a total of 14,095 units were sold across completed orders (or 16,019 units across all order statuses).</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT SUM(oi.quantity) AS units_sold
+FROM orders o
+JOIN order_items oi ON o.order_id = oi.order_id
+WHERE o.order_date = &#x27;2026-09-29&#x27;
+  AND o.status = &#x27;completed&#x27;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;units_sold&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      14095
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Guided queries</strong><span>5.18s</span></div><p>A total of 14,095 units were sold across completed orders on 29 September 2026.</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT SUM(oi.quantity) AS &quot;value&quot;
+FROM order_items oi
+JOIN orders o ON o.order_id = oi.order_id
+WHERE o.status = &#x27;completed&#x27;
+  AND o.order_date = DATE &#x27;2026-09-29&#x27;;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;value&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      14095
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Domain + workflows</strong><span>4.52s</span></div><p>There were 14,095 units sold across completed orders on 29 September 2026.</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT SUM(i.quantity) AS &quot;value&quot;
+FROM order_items i
+JOIN orders o ON o.order_id = i.order_id
+WHERE o.status = &#x27;completed&#x27;
+  AND o.order_date = DATE &#x27;2026-09-29&#x27;;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;value&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      14095
+    ]
+  ]
+}</pre></details></article></div><details><summary>Reference SQL and expected values</summary><pre>SELECT &#x27;Units sold&#x27; AS label, SUM(i.quantity)::DOUBLE AS value FROM order_items i JOIN orders o ON o.order_id=i.order_id WHERE o.status=&#x27;completed&#x27; AND o.order_date=DATE &#x27;2026-09-29&#x27;</pre><pre>[
+  [
+    &quot;Units sold&quot;,
+    14095.0
+  ]
+]</pre></details></section><section class="question"><h2>Q5 · What was session conversion on 29 September 2026?</h2><div class="answers"><article><div class="answer-title"><strong>Runtime discovery</strong><span>9.59s</span></div><p>On 29 September 2026, the session conversion rate was 24.99%, with 2,671 orders placed across 10,690 total sessions.</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT
+  ROUND(COUNT(order_id)::DOUBLE / COUNT(*) * 100, 2) AS session_conversion_rate
+FROM sessions
+WHERE session_date = &#x27;2026-09-29&#x27;;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;session_conversion_rate&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      24.99
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Schema only</strong><span>3.99s</span></div><p>On September 29, 2026, the session conversion rate was 24.99%, with 2,671 out of 10,690 sessions resulting in an order.</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT
+    COUNT(*) AS total_sessions,
+    COUNT(order_id) AS converted_sessions,
+    ROUND(100.0 * COUNT(order_id) / COUNT(*), 2) AS conversion_rate_pct
+FROM sessions
+WHERE session_date = &#x27;2026-09-29&#x27;;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;total_sessions&quot;,
+    &quot;converted_sessions&quot;,
+    &quot;conversion_rate_pct&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      10690,
+      2671,
+      24.99
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Guided queries</strong><span>8.43s</span></div><p>Session conversion on 29 September 2026 was 24.99% for placed orders (2,671 orders from 10,690 sessions). If restricted to completed orders, the conversion rate was 21.96%.</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT
+    ROUND(100.0 * COUNT(order_id) / COUNT(*), 2) AS conversion_rate
+FROM sessions
+WHERE session_date = DATE &#x27;2026-09-29&#x27;;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;conversion_rate&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      24.99
+    ]
+  ]
+}</pre></details></article><article><div class="answer-title"><strong>Domain + workflows</strong><span>11.85s</span></div><p>Session conversion was 24.99% on 29 September 2026, measured as placed-order sessions divided by total sessions (21.96% if restricted to completed orders).</p><small>Matches reference</small><details><summary>SQL and returned data</summary><pre>SELECT
+  ROUND(100.0 * COUNT(order_id) / COUNT(*), 2) AS &quot;value&quot;
+FROM sessions
+WHERE session_date = DATE &#x27;2026-09-29&#x27;;</pre><pre>{
+  &quot;columns&quot;: [
+    &quot;value&quot;
+  ],
+  &quot;rows&quot;: [
+    [
+      24.99
+    ]
+  ]
+}</pre></details></article></div><details><summary>Reference SQL and expected values</summary><pre>SELECT &#x27;Placed-order session conversion (%)&#x27; AS label, 100.0 * COUNT(order_id)/COUNT(*) AS value FROM sessions WHERE session_date=DATE &#x27;2026-09-29&#x27;</pre><pre>[
+  [
+    &quot;Placed-order session conversion (%)&quot;,
+    24.98596819457437
+  ]
+]</pre></details></section></main></html>

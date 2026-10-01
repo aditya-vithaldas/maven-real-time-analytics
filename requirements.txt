@@ -1,0 +1,4 @@
+duckdb==1.5.6
+python-dotenv==1.2.3
+google-genai==2.25.0
+sqlglot==30.20.0

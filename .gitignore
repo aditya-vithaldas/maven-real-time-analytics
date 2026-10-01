@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+*.duckdb
+*.duckdb.wal
+node_modules/
+data/cloud-download/
+data/cloud-*.json
+data/local-regenerated/
+data-regenerated/
+demo-*.png
+verification-*.json
+.DS_Store
+*.log

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Meridian · Context Lab</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%232d57dc'/%3E%3Cpath d='M9 28V13l11 11 11-11v15' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
+</head>
+<body>
+<main>
+  <div id="tabs" role="tablist" aria-label="Knowledge levels"></div>
+  <section id="panel" role="tabpanel" tabindex="0">
+    <div class="sr-only"><span id="level"></span><h2 id="title"></h2><p id="description"></p></div>
+    <div class="workspace-toolbar">
+      <div id="timings" class="timing-strip" aria-label="Current response time"></div>
+      <span class="engine"><span class="spark" aria-hidden="true">✦</span><strong>Gemini 3.8 Live</strong><span>Brief voice replies</span></span>
+      <div class="toolbar-controls">
+        <button id="show-app-prompt" class="subtle icon-button" type="button" title="View app-building prompt" aria-label="View app-building prompt" aria-haspopup="dialog" aria-controls="app-prompt-dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6Z"/><path d="M14 3v6h6M9 12l-3 3 3 3m6-6 3 3-3 3"/></svg></button>
+      </div>
+    </div>
+    <div class="workspace">
+      <div class="conversation">
+        <div id="messages" aria-live="polite"></div>
+        <div class="composer">
+          <div id="status" role="status">Ready to explore</div>
+          <form id="form">
+            <label class="sr-only" for="question">Question for the database</label>
+            <textarea id="question" rows="1" placeholder="Ask a question about the data…"></textarea>
+            <div class="composer-actions">
+              <button id="mic" type="button" class="mic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v3M9 21h6"/></svg><span>Start talking</span></button>
+              <span id="voice-status" class="sr-only">Gemini 3.8 Live</span>
+              <button id="send" type="submit" class="primary">Ask question <span aria-hidden="true">↗</span></button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <aside class="prompt-pane">
+        <div class="prompt-heading"><h3>Gemini runtime prompt</h3><button id="copy" class="subtle">Copy</button></div>
+        <section class="prompt-overview" aria-label="Key prompt instructions"><p id="prompt-inheritance" class="prompt-inheritance" hidden></p><ol id="prompt-heads" type="A"></ol></section>
+        <hr class="prompt-divider">
+        <section class="system-prompt" aria-label="Exact system prompt"><div class="prompt-summary">Exact system prompt <span id="prompt-length"></span></div><pre id="prompt"></pre></section>
+        <div class="isolation">Separate tab context · Same database</div>
+      </aside>
+    </div>
+  </section>
+</main>
+<dialog id="app-prompt-dialog" class="prompt-dialog" aria-labelledby="app-prompt-title" aria-describedby="app-prompt-note">
+  <div class="dialog-heading"><h2 id="app-prompt-title">Prompt to create the app</h2><div class="dialog-actions"><button id="copy-app-prompt" class="subtle" type="button" disabled>Copy</button><button id="close-app-prompt" class="subtle icon-button" type="button" aria-label="Close app-building prompt" autofocus><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></div>
+  <p id="app-prompt-note">Consolidated instructions to recreate this app from the requirements we settled on.</p>
+  <pre id="app-prompt" tabindex="0">Loading app-building prompt…</pre>
+</dialog>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

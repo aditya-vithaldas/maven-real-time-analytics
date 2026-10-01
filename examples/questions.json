@@ -1,0 +1,325 @@
+{
+  "datasetVersion": "2026-09-29-v5-context-10m",
+  "dateAnchor": "2026-09-29",
+  "source": "Expected numeric answers computed from downloaded cloud database; these are build fixtures, not hardcoded product responses.",
+  "examples": [
+    {
+      "id": "daily-sales",
+      "question": "What were my sales on 29 September 2026?",
+      "sql": "SELECT order_date::VARCHAR AS label, SUM(net_amount)::DOUBLE AS value FROM orders WHERE status='completed' AND order_date=DATE '2026-09-29' GROUP BY order_date",
+      "expectedRows": [
+        {
+          "label": "2026-09-29",
+          "value": 1651201.07
+        }
+      ],
+      "notes": "Completed net revenue, USD.",
+      "numericTolerance": 0.01
+    },
+    {
+      "id": "yesterday",
+      "question": "What were my sales yesterday?",
+      "sql": "SELECT order_date::VARCHAR AS label, SUM(net_amount)::DOUBLE AS value FROM orders WHERE status='completed' AND order_date=DATE '2026-09-28' GROUP BY order_date",
+      "expectedRows": [
+        {
+          "label": "2026-09-28",
+          "value": 1674392.48
+        }
+      ],
+      "notes": "Anchor is dataset end 2026-09-29; yesterday is 2026-09-28.",
+      "numericTolerance": 0.01
+    },
+    {
+      "id": "daily-trend",
+      "question": "Show sales for the last seven available days.",
+      "sql": "SELECT order_date::VARCHAR AS label, SUM(net_amount)::DOUBLE AS value FROM orders WHERE status='completed' AND order_date BETWEEN DATE '2026-09-23' AND DATE '2026-09-29' GROUP BY order_date ORDER BY order_date",
+      "expectedRows": [
+        {
+          "label": "2026-09-23",
+          "value": 1677816.87
+        },
+        {
+          "label": "2026-09-24",
+          "value": 1120252.94
+        },
+        {
+          "label": "2026-09-25",
+          "value": 1667650.36
+        },
+        {
+          "label": "2026-09-26",
+          "value": 1659961.5
+        },
+        {
+          "label": "2026-09-27",
+          "value": 1725209.0
+        },
+        {
+          "label": "2026-09-28",
+          "value": 1674392.48
+        },
+        {
+          "label": "2026-09-29",
+          "value": 1651201.07
+        }
+      ],
+      "notes": "Daily line chart, seven inclusive dates.",
+      "numericTolerance": 0.01
+    },
+    {
+      "id": "region-followup",
+      "question": "Break that down by region.",
+      "sql": "SELECT r.region_name AS label, SUM(o.net_amount)::DOUBLE AS value FROM orders o JOIN customers c ON c.customer_id=o.customer_id JOIN regions r ON r.region_id=c.region_id WHERE o.status='completed' AND o.order_date BETWEEN DATE '2026-09-23' AND DATE '2026-09-29' GROUP BY r.region_id,r.region_name ORDER BY value DESC",
+      "expectedRows": [
+        {
+          "label": "South Asia",
+          "value": 1170264.72
+        },
+        {
+          "label": "North America",
+          "value": 1159520.6
+        },
+        {
+          "label": "East Asia",
+          "value": 1152051.78
+        },
+        {
+          "label": "Western Europe",
+          "value": 1127805.45
+        },
+        {
+          "label": "United Kingdom",
+          "value": 1118044.66
+        },
+        {
+          "label": "Eastern Europe",
+          "value": 1117678.46
+        },
+        {
+          "label": "Latin America",
+          "value": 1115243.71
+        },
+        {
+          "label": "Oceania",
+          "value": 1077575.43
+        },
+        {
+          "label": "Southeast Asia",
+          "value": 1077398.37
+        },
+        {
+          "label": "Middle East & Africa",
+          "value": 1060901.04
+        }
+      ],
+      "notes": "Follow-up to daily-trend; preserve metric, status, and period. These values reconcile to the seven-day total.",
+      "numericTolerance": 0.01,
+      "contextFrom": "daily-trend"
+    },
+    {
+      "id": "category-sales",
+      "question": "Which categories sold the most on 29 September?",
+      "sql": "SELECT c.category_name AS label, SUM(i.net_amount)::DOUBLE AS value FROM order_items i JOIN orders o ON o.order_id=i.order_id JOIN products p ON p.product_id=i.product_id JOIN categories c ON c.category_id=p.category_id WHERE o.status='completed' AND o.order_date=DATE '2026-09-29' GROUP BY c.category_id,c.category_name ORDER BY value DESC",
+      "expectedRows": [
+        {
+          "label": "Haircare",
+          "value": 48626.9
+        },
+        {
+          "label": "Phones & Accessories",
+          "value": 47499.73
+        },
+        {
+          "label": "Headphones & Audio",
+          "value": 47163.08
+        },
+        {
+          "label": "Arts & Crafts",
+          "value": 46450.58
+        },
+        {
+          "label": "Team Sports",
+          "value": 45279.8
+        },
+        {
+          "label": "Makeup",
+          "value": 45195.21
+        },
+        {
+          "label": "Cameras & Photography",
+          "value": 45124.51
+        },
+        {
+          "label": "Cookware & Bakeware",
+          "value": 44840.77
+        },
+        {
+          "label": "Beverages",
+          "value": 44147.59
+        },
+        {
+          "label": "Coffee & Tea",
+          "value": 44088.21
+        },
+        {
+          "label": "T-Shirts & Tops",
+          "value": 43861.14
+        },
+        {
+          "label": "Outdoor & Camping",
+          "value": 43850.58
+        },
+        {
+          "label": "Jeans & Trousers",
+          "value": 43615.62
+        },
+        {
+          "label": "Fiction & Literature",
+          "value": 43472.78
+        },
+        {
+          "label": "Bedding & Linens",
+          "value": 43261.86
+        },
+        {
+          "label": "Fragrance",
+          "value": 43237.01
+        },
+        {
+          "label": "Cycling",
+          "value": 43037.94
+        },
+        {
+          "label": "Cooking & Food Books",
+          "value": 42659.41
+        },
+        {
+          "label": "Pantry Essentials",
+          "value": 42638.52
+        },
+        {
+          "label": "Plush & Pretend Play",
+          "value": 42392.59
+        },
+        {
+          "label": "Science & Nature",
+          "value": 41363.79
+        },
+        {
+          "label": "Business & Leadership",
+          "value": 41262.62
+        },
+        {
+          "label": "Furniture",
+          "value": 41185.56
+        },
+        {
+          "label": "Shoes & Accessories",
+          "value": 40792.48
+        },
+        {
+          "label": "Lighting",
+          "value": 40625.53
+        },
+        {
+          "label": "Running & Training",
+          "value": 40128.11
+        },
+        {
+          "label": "Home Decor",
+          "value": 39849.29
+        },
+        {
+          "label": "Snacks & Chocolate",
+          "value": 39745.83
+        },
+        {
+          "label": "Building Sets",
+          "value": 39726.11
+        },
+        {
+          "label": "Board Games",
+          "value": 39445.7
+        },
+        {
+          "label": "Bath & Body",
+          "value": 38759.71
+        },
+        {
+          "label": "Dresses & Skirts",
+          "value": 38383.91
+        },
+        {
+          "label": "Children\u2019s Books",
+          "value": 38176.06
+        },
+        {
+          "label": "Outdoor Toys",
+          "value": 35624.46
+        },
+        {
+          "label": "Yoga & Pilates",
+          "value": 35349.02
+        },
+        {
+          "label": "Skincare",
+          "value": 34953.59
+        },
+        {
+          "label": "Smart Home",
+          "value": 34921.28
+        },
+        {
+          "label": "Specialty Foods",
+          "value": 34754.77
+        },
+        {
+          "label": "Computers & Tablets",
+          "value": 33276.96
+        },
+        {
+          "label": "Jackets & Coats",
+          "value": 32432.46
+        }
+      ],
+      "notes": "Use item revenue and completed orders. Include full breakdown as evidence; display top five plus Everything else.",
+      "numericTolerance": 0.01
+    },
+    {
+      "id": "units",
+      "question": "How many units sold on 29 September?",
+      "sql": "SELECT 'Units sold' AS label, SUM(i.quantity)::DOUBLE AS value FROM order_items i JOIN orders o ON o.order_id=i.order_id WHERE o.status='completed' AND o.order_date=DATE '2026-09-29'",
+      "expectedRows": [
+        {
+          "label": "Units sold",
+          "value": 14095.0
+        }
+      ],
+      "notes": "Units are SUM(quantity), not line-item or order count.",
+      "numericTolerance": 0.01
+    },
+    {
+      "id": "conversion",
+      "question": "What was session conversion on 29 September?",
+      "sql": "SELECT 'Placed-order session conversion (%)' AS label, 100.0 * COUNT(order_id)/COUNT(*) AS value FROM sessions WHERE session_date=DATE '2026-09-29'",
+      "expectedRows": [
+        {
+          "label": "Placed-order session conversion (%)",
+          "value": 24.98596819457437
+        }
+      ],
+      "notes": "Placed orders of all statuses divided by sessions; not distinct buyer conversion.",
+      "numericTolerance": 0.01
+    },
+    {
+      "id": "missing-funnel",
+      "question": "Where do users drop out between search, cart, and checkout?",
+      "expectedBehavior": "Explain that stage-level events are absent. Report supported session-to-order conversion if useful; never invent stage drop-offs."
+    },
+    {
+      "id": "competitor-cause",
+      "question": "Did the competitor promotion cause the August drop?",
+      "expectedBehavior": "Quantify the selected baseline and measured category/region contribution. Treat market_snapshots and business_events as synthetic context, not causal proof. If scope is open, offer three investigations rather than asserting cause."
+    }
+  ]
+}
